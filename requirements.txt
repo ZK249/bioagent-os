@@ -1,0 +1,25 @@
+# ========== 核心依赖 ==========
+pymilvus>=2.4.0,<2.5.0          # Milvus 本地文件模式 + 向量操作
+torch>=2.0.0,<2.5.0              # DNABERT-2 / BGE-M3 推理
+transformers>=4.35.0             # 预训练模型加载 (DNABERT-2, BGE-M3)
+biopython>=1.81                  # FASTA / PDB 解析 (SeqIO)
+PyYAML>=6.0                      # 配置文件读取
+numpy>=1.24.0                    # 向量运算
+
+# ========== 模块B: Agent-Core & Web ==========
+fastapi>=0.110.0                 # Web 服务
+uvicorn>=0.27.0                 # ASGI 服务器
+pydantic>=2.0.0                 # 数据校验 (FastAPI 依赖)
+jinja2>=3.1.0                   # 模板渲染
+python-multipart>=0.0.9         # FastAPI 表单解析
+redis>=5.0.0                    # 短期记忆
+langgraph>=0.0.50               # 多智能体状态机
+openai>=1.12.0                  # LLM API 客户端 (兼容多平台)
+
+# ========== 模块C: Deep Research ==========
+requests>=2.31.0                # PubMed / Arxiv HTTP 检索
+
+# ========== 可选依赖 ==========
+# pandas>=2.0.0                 # 表达矩阵 / 数据分析 (如需要)
+# sentence-transformers>=2.3.0 # BGE-M3 官方推荐加载方式 (可选)
+# ipykernel>=6.0.0              # Jupyter Notebook 支持
