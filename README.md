@@ -105,55 +105,119 @@ python scripts/deep_research_demo.py
 ```
 bioagent-os/
 ├── configs/
-│   ├── data_engine.yaml              # 数据引擎配置
-│   ├── data_engine_dnabert.yaml    # DNABERT-2 隔离配置
-│   ├── agent_core.yaml             # Agent 配置（LLM provider 切换）
-│   └── deep_research.yaml          # 文献检索配置
+│   ├── agent_core.yaml         
+│   ├── data_engine_dnabert.yaml         
+│   ├── data_engine.yaml         
+│   ├── deep_research.yaml          # 文献检索配置
+│   └── system.yaml                 # 系统级配置
 ├── data/
 │   ├── real/                        # 真实生物数据（NCBI FASTA / RCSB PDB）
-│   ├── milvus_demo.db              # BGE-M3 向量库
-│   └── milvus_dnabert.db          # DNABERT-2 向量库
+│   ├── demo_expression.csv          # 模拟表达矩阵
+│   ├── demo_sequences.fasta       # 模拟 FASTA 序列
+│   ├── demo_structure_1.pdb       # 模拟 PDB 结构
+│   ├── demo_structure_2.pdb
+│   ├── demo_structure_3.pdb
+│   └── milvus_demo.db             # Milvus 本地文件数据库
+├── logs/                            # 运行日志
 ├── models/
-│   └── dnabert-2/                  # 本地 DNABERT-2 模型文件
+│   ├── bge-m3/                      # BGE-M3 模型文件
+│   └── dnabert-2/                   # DNABERT-2 模型文件
 ├── modules/
+│   ├── init.py
 │   ├── agent_core/
-│   │   ├── agents/                  # Router / Research / Data / Memory
-│   │   ├── memory/                  # 四层记忆实现
-│   │   ├── tools/                   # 工具注册表 + 生物分析工具
-│   │   ├── prompts/                 # 系统提示词（txt 文件）
-│   │   ├── rag/                     # 向量检索封装
-│   │   ├── web/                     # FastAPI 应用
-│   │   ├── llm_client.py           # 多平台 LLM 客户端
-│   │   ├── graph.py                # LangGraph 工作流
-│   │   └── state.py                # Agent 状态定义
+│   │   ├── agents/
+│   │   │   └── router_agent.py    # 路由 Agent
+│   │   ├── memory/
+│   │   │   ├── init.py
+│   │   │   ├── base.py            # 记忆抽象基类
+│   │   │   ├── entity_memory.py   # 实体记忆（Milvus JSON）
+│   │   │   ├── long_term.py       # 长期记忆（Milvus 向量）
+│   │   │   ├── memory_manager.py  # 四层记忆统一管理器
+│   │   │   ├── retriever.py       # 记忆检索器
+│   │   │   ├── short_term.py      # 短期记忆（Redis）
+│   │   │   └── working_memory.py  # 工作记忆（Python 状态机）
+│   │   ├── prompts/
+│   │   │   ├── bio_analysis.txt   # 生物分析系统提示
+│   │   │   ├── graph_rag.txt      # 知识图谱提示
+│   │   │   ├── memory_update.txt  # 记忆更新提示
+│   │   │   └── router.txt         # 路由提示
+│   │   ├── templates/
+│   │   │   └── index.html         # Web 前端页面
+│   │   ├── tools/
+│   │   │   ├── init.py
+│   │   │   ├── analysis_tool.py   # 生物分析工具
+│   │   │   ├── base.py            # 工具抽象基类
+│   │   │   ├── search_tool.py     # 文献检索工具（模块C 封装）
+│   │   │   └── vector_store.py    # 向量检索封装
+│   │   └── web/
+│   │       ├── init.py
+│   │       ├── app.py             # FastAPI 主应用
+│   │       ├── graph.py           # LangGraph 工作流
+│   │       ├── llm_client.py     # 多平台 LLM 客户端
+│   │       └── state.py           # Agent 状态定义
 │   ├── data_engine/
-│   │   ├── loaders/                 # FASTA / PDB / 文献 / 表达矩阵
-│   │   ├── vectorizers/            # BGE-M3 / DNABERT-2
-│   │   ├── milvus_platform/        # Milvus 管理 + Hybrid Search
-│   │   ├── preprocessors/          # K-mer / 滑动窗口 / 结构处理
-│   │   └── pipeline.py             # 异步摄入 Pipeline
+│   │   ├── init.py
+│   │   ├── pipeline.py            # 异步数据摄入 Pipeline
+│   │   ├── loaders/
+│   │   │   ├── init.py
+│   │   │   ├── base.py            # 加载器基类
+│   │   │   ├── csv_loader.py      # 表达矩阵加载
+│   │   │   ├── fasta_loader.py    # FASTA 序列加载
+│   │   │   ├── pdb_loader.py      # PDB 结构加载
+│   │   │   └── pdf_loader.py      # PDF 文献加载
+│   │   ├── milvus_platform/
+│   │   │   ├── init.py
+│   │   │   ├── hybrid_retriever.py # Hybrid Search（Dense+Sparse）
+│   │   │   ├── manager.py         # Milvus Collection 管理
+│   │   │   └── schema.py          # 字段定义
+│   │   ├── preprocessors/
+│   │   │   ├── init.py
+│   │   │   ├── sequence_processor.py  # K-mer / 滑动窗口
+│   │   │   ├── structure_processor.py # 结构处理
+│   │   │   └── text_processor.py      # 文本预处理
+│   │   ├── synthesizers/
+│   │   │   ├── init.py
+│   │   │   ├── sequence_synthesizer.py
+│   │   │   └── text_synthesizer.py
+│   │   └── vectorizers/
+│   │       ├── init.py
+│   │       ├── base.py            # 向量化器基类
+│   │       ├── bge_m3_vectorizer.py
+│   │       └── dnabert_vectorizer.py
 │   ├── deep_research/
-│   │   ├── searchers/              # PubMed / Arxiv 检索器
-│   │   ├── processors/             # 去重 / 排序 / 格式化
-│   │   ├── synthesizers/           # LLM 自动综述生成
-│   │   ├── config.py               # 配置读取
-│   │   └── pipeline.py            # 端到端 Pipeline
+│   │   ├── init.py
+│   │   ├── config.py              # 配置读取
+│   │   ├── pipeline.py            # 端到端 Deep Research Pipeline
+│   │   ├── processors/
+│   │   │   ├── init.py
+│   │   │   └── paper_processor.py # 去重 / 排序 / 格式化
+│   │   ├── searchers/
+│   │   │   ├── init.py
+│   │   │   ├── arxiv_searcher.py  # Arxiv API 检索
+│   │   │   ├── base.py            # 检索器基类
+│   │   │   └── pubmed_searcher.py # PubMed E-utilities 检索
+│   │   └── synthesizers/
+│   │       ├── init.py
+│   │       └── review_generator.py # LLM 自动综述
 │   └── shared/
-│       └── logger.py              # 日志工具
-├── scripts/
-│   ├── init_db.py                  # 初始化 BGE-M3 数据库
-│   ├── init_db_dnabert.py         # 初始化 DNABERT-2 数据库
-│   ├── download_real_data.py      # 下载 NCBI/RCSB 真实数据
-│   ├── ingest_real_data.py        # 摄入真实数据（BGE-M3）
-│   ├── ingest_dnabert_demo.py    # 摄入真实数据（DNABERT-2）
-│   ├── agent_demo.py              # 模块B 命令行演示
-│   ├── deep_research_demo.py     # 模块C 命令行演示
-│   └── run_web.py                 # 启动 Web 服务
-├── templates/
-│   └── index.html                 # 前端页面（Agent 对话 + 记忆面板）
+│       ├── init.py
+│       ├── exceptions.py            # 自定义异常
+│       └── logger.py                # 日志工具
 ├── notebooks/
 │   └── 01_data_engine_quickstart.ipynb  # 模块A 交互式文档
-└── README.md                     
+├── scripts/
+│   ├── deep_research_demo.py      # 模块C 命令行演示
+│   ├── download_real_data.py      # 下载 NCBI/RCSB 真实数据
+│   ├── generate_test_data.py      # 生成模拟数据
+│   ├── ingest_demo.py             # 模拟数据摄入（BGE-M3）
+│   ├── ingest_dnabert_demo.py     # 模拟数据摄入（DNABERT-2）
+│   ├── ingest_real_data.py        # 真实数据摄入（BGE-M3）
+│   ├── init_db.py                 # 初始化 BGE-M3 数据库
+│   ├── init_db_dnabert.py        # 初始化 DNABERT-2 数据库
+│   └── run_web.py                 # 启动 Web 服务
+├── venv/                            # Python 虚拟环境
+├── README.md
+└── requirements.txt                  
 ```
 
 ---
