@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioAgent-OS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        /* 左侧：对话面板 */
+        .chat-panel {
+            width: 55%;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #1e293b;
+        }
+        .chat-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #1e293b;
+            background: #1e293b;
+        }
+        .chat-header h1 {
+            font-size: 18px;
+            color: #60a5fa;
+        }
+        .chat-header .subtitle {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        .message.user {
+            align-self: flex-end;
+            background: #2563eb;
+            color: white;
+        }
+        .message.assistant {
+            align-self: flex-start;
+            background: #1e293b;
+            border: 1px solid #334155;
+        }
+        .message .agent-badge {
+            display: inline-block;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            background: #059669;
+            color: white;
+        }
+        
+        .input-area {
+            padding: 16px 20px;
+            border-top: 1px solid #1e293b;
+            display: flex;
+            gap: 10px;
+            background: #1e293b;
+        }
+        .input-area input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-size: 14px;
+            outline: none;
+        }
+        .input-area input:focus {
+            border-color: #60a5fa;
+        }
+        .input-area button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .input-area button:hover {
+            background: #3b82f6;
+        }
+        .input-area button:disabled {
+            background: #475569;
+            cursor: not-allowed;
+        }
+        
+        /* 右侧：记忆面板 */
+        .memory-panel {
+            width: 45%;
+            display: flex;
+            flex-direction: column;
+            background: #0f172a;
+        }
+        .memory-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #1e293b;
+            background: #1e293b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .memory-header h2 {
+            font-size: 16px;
+            color: #60a5fa;
+        }
+        .memory-header button {
+            padding: 4px 12px;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .memory-header button:hover {
+            color: #e2e8f0;
+            border-color: #64748b;
+        }
+        
+        .memory-tabs {
+            display: flex;
+            border-bottom: 1px solid #1e293b;
+        }
+        .memory-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+        .memory-tab:hover {
+            color: #e2e8f0;
+        }
+        .memory-tab.active {
+            color: #60a5fa;
+            border-bottom-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.1);
+        }
+        
+        .memory-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        .memory-section {
+            display: none;
+        }
+        .memory-section.active {
+            display: block;
+        }
+        
+        .memory-item {
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .memory-item .label {
+            font-size: 11px;
+            color: #60a5fa;
+            margin-bottom: 4px;
+        }
+        .memory-item .empty {
+            color: #475569;
+            font-style: italic;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #64748b;
+            font-size: 14px;
+        }
+        .loading::after {
+            content: "";
+            width: 16px;
+            height: 16px;
+            border: 2px solid #334155;
+            border-top-color: #60a5fa;
+            border-radius: 50%;
+            margin-left: 10px;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error {
+            padding: 12px 16px;
+            background: #7f1d1d;
+            border: 1px solid #b91c1c;
+            border-radius: 8px;
+            color: #fca5a5;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-panel">
+        <div class="chat-header">
+            <h1>BioAgent-OS</h1>
+            <div class="subtitle">模块B：Agent-Core + 四层记忆系统</div>
+        </div>
+        <div class="messages" id="messages">
+            <div class="message assistant">
+                <div>欢迎使用 BioAgent-OS。输入生物学问题，Agent 将结合四层记忆系统为您解答。</div>
+            </div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="queryInput" placeholder="输入问题，例如：TP53 在细胞周期中的作用..." onkeypress="if(event.key==='Enter')sendQuery()">
+            <button id="sendBtn" onclick="sendQuery()">发送</button>
+        </div>
+    </div>
+    
+    <div class="memory-panel">
+        <div class="memory-header">
+            <h2>记忆系统</h2>
+            <button onclick="clearMemory()">清空记忆</button>
+        </div>
+        <div class="memory-tabs">
+            <div class="memory-tab active" onclick="switchTab('working')">工作记忆</div>
+            <div class="memory-tab" onclick="switchTab('short')">短期记忆</div>
+            <div class="memory-tab" onclick="switchTab('long')">长期记忆</div>
+            <div class="memory-tab" onclick="switchTab('entity')">实体记忆</div>
+        </div>
+        <div class="memory-content" id="memoryContent">
+            <div class="memory-section active" id="tab-working">
+                <div class="memory-item"><span class="empty">等待查询...</span></div>
+            </div>
+            <div class="memory-section" id="tab-short">
+                <div class="memory-item"><span class="empty">暂无对话历史</span></div>
+            </div>
+            <div class="memory-section" id="tab-long">
+                <div class="memory-item"><span class="empty">暂无长期记忆</span></div>
+            </div>
+            <div class="memory-section" id="tab-entity">
+                <div class="memory-item"><span class="empty">暂无实体关系</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMemory = null;
+        
+        async function sendQuery() {
+            const input = document.getElementById('queryInput');
+            const btn = document.getElementById('sendBtn');
+            const query = input.value.trim();
+            if (!query) return;
+            
+            // 添加用户消息
+            addMessage('user', query);
+            input.value = '';
+            btn.disabled = true;
+            
+            // 添加 loading
+            const loadingId = addLoading();
+            
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({query})
+                });
+                
+                removeLoading(loadingId);
+                
+                if (!res.ok) {
+                    const err = await res.text();
+                    addMessage('assistant', `<div class="error">请求失败: ${err}</div>`);
+                    return;
+                }
+                
+                const data = await res.json();
+                currentMemory = data.memory;
+                
+                // 显示 Agent 响应
+                const badge = `<span class="agent-badge">${data.agent_type}</span><br>`;
+                addMessage('assistant', badge + escapeHtml(data.response));
+                
+                // 更新记忆面板
+                updateMemoryPanel(data.memory);
+                
+            } catch (e) {
+                removeLoading(loadingId);
+                addMessage('assistant', `<div class="error">网络错误: ${e.message}</div>`);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+        
+        function addMessage(role, html) {
+            const container = document.getElementById('messages');
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            div.innerHTML = html;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function addLoading() {
+            const container = document.getElementById('messages');
+            const div = document.createElement('div');
+            div.className = 'loading';
+            div.id = 'loading-' + Date.now();
+            div.textContent = 'Agent 思考中...';
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            return div.id;
+        }
+        
+        function removeLoading(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        function updateToolPanel(tools) {
+            if (!tools || tools.length === 0) return;
+    
+            const tool = tools[0];
+            const papers = tool.top_papers || [];
+    
+            let html = `
+                <div class="memory-item" style="border-left: 3px solid #059669;">
+                    <div class="label" style="color: #059669;">🔧 Tool: ${escapeHtml(tool.tool)}</div>
+                    <div>Query: ${escapeHtml(tool.query)}</div>
+                    <div style="margin-top: 4px; color: #64748b; font-size: 11px;">
+                        Papers found: ${tool.papers_found} | Source: PubMed/Arxiv
+                    </div>
+                </div>
+            `;
+    
+            if (papers.length > 0) {
+                html += `<div class="memory-item"><div class="label">Top Papers</div>`;
+                papers.forEach((p, i) => {
+                    html += `<div style="margin-left: 8px; font-size: 12px; margin-top: 4px;">
+                        ${i+1}. [${escapeHtml(p.year || 'N/A')}] ${escapeHtml((p.title || 'Unknown').substring(0, 60))}...
+                    </div>`;
+                });
+                html += `</div>`;
+            }
+    
+            // 插入到工作记忆面板顶部
+            const workingTab = document.getElementById('tab-working');
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            workingTab.insertBefore(temp.firstElementChild, workingTab.firstChild);
+        }
+        
+        function updateMemoryPanel(memory) {
+            // 工作记忆
+            const working = memory.working;
+            document.getElementById('tab-working').innerHTML = `
+                <div class="memory-item">
+                    <div class="label">Current Task</div>
+                    <div>${escapeHtml(working.current_task || '无')}</div>
+                </div>
+                <div class="memory-item">
+                    <div class="label">Steps Completed</div>
+                    <div>${working.steps_completed.map(s => `• ${escapeHtml(s)}`).join('<br>') || '<span class="empty">无</span>'}</div>
+                </div>
+                <div class="memory-item">
+                    <div class="label">TODO</div>
+                    <div>${working.todo.map(t => `• ${escapeHtml(t)}`).join('<br>') || '<span class="empty">无</span>'}</div>
+                </div>
+            `;
+            
+            // 短期记忆
+            const short = memory.short_term;
+            document.getElementById('tab-short').innerHTML = short.length ? short.map(h => `
+                <div class="memory-item">
+                    <div class="label">${h.role}</div>
+                    <div>${escapeHtml(h.content.substring(0, 200))}${h.content.length > 200 ? '...' : ''}</div>
+                </div>
+            `).join('') : '<div class="memory-item"><span class="empty">暂无对话历史</span></div>';
+            
+            // 长期记忆
+            const long = memory.long_term;
+            document.getElementById('tab-long').innerHTML = long.length ? long.map(r => `
+                <div class="memory-item">
+                    <div class="label">${r.memory_type} | score: ${r.distance.toFixed(3)}</div>
+                    <div>${escapeHtml(r.content.substring(0, 200))}${r.content.length > 200 ? '...' : ''}</div>
+                </div>
+            `).join('') : '<div class="memory-item"><span class="empty">暂无长期记忆</span></div>';
+            
+            // 实体记忆
+            const entities = memory.entities;
+            document.getElementById('tab-entity').innerHTML = entities.length ? entities.map(e => `
+                <div class="memory-item">
+                    <div class="label">Entity Relation</div>
+                    <div>${escapeHtml(e.head)} → <span style="color:#60a5fa">[${escapeHtml(e.relation)}]</span> → ${escapeHtml(e.tail)}</div>
+                    <div style="margin-top:4px;color:#64748b;font-size:11px;">confidence: ${e.confidence.toFixed(2)}</div>
+                </div>
+            `).join('') : '<div class="memory-item"><span class="empty">暂无实体关系</span></div>';
+        }
+        
+        function switchTab(name) {
+            document.querySelectorAll('.memory-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.memory-section').forEach(s => s.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tab-' + name).classList.add('active');
+        }
+        
+        async function clearMemory() {
+            if (!confirm('确定清空所有记忆？')) return;
+            try {
+                await fetch('/api/clear', {method: 'POST'});
+                document.querySelectorAll('.memory-section').forEach(s => {
+                    s.innerHTML = '<div class="memory-item"><span class="empty">已清空</span></div>';
+                });
+                document.getElementById('messages').innerHTML = `
+                    <div class="message assistant"><div>记忆已清空。</div></div>
+                `;
+            } catch (e) {
+                alert('清空失败: ' + e.message);
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

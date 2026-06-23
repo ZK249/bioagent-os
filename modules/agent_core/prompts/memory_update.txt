@@ -1,0 +1,3 @@
+Summarize the following interaction into a concise memory entry.
+Extract key entities, relations, and conclusions.
+Format: JSON with keys [entities, relations, summary]
