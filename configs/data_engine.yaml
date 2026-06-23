@@ -1,0 +1,40 @@
+milvus:
+  # host/port/db_name 在本地文件模式下被忽略
+  collection_name: "bio_knowledge"
+  dense_dim: 1024
+  sparse_dim: 250002
+  # ... 其他不变     # BGE-M3 sparse vocab size
+  
+  # 分层索引配置
+  index:
+    dense:
+      type: "HNSW"
+      metric_type: "COSINE"
+      params:
+        M: 16
+        efConstruction: 200
+    sparse:
+      type: "SPARSE_INVERTED_INDEX"
+      metric_type: "IP"    # Inner Product
+      
+  # 混合检索权重
+  hybrid_weights:
+    dense: 0.5
+    sparse: 0.5
+
+  # 分区策略（按数据源分层）
+  partitions:
+    - "fasta"
+    - "pdb"
+    - "literature"
+    - "expression"
+
+vectorizer:
+  model_name: "BAAI/bge-m3"
+  device: "cpu"           # 或 "cuda"
+  batch_size: 5
+
+pipeline:
+  max_workers: 2
+  batch_size: 5
+  queue_size: 50

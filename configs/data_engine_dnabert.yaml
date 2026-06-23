@@ -1,0 +1,24 @@
+milvus:
+  host: "127.0.0.1"
+  port: 19530
+  db_name: "default"
+  uri: "data/milvus_dnabert.db"
+  collection_name: "bio_knowledge_dnabert"
+  dense_dim: 768
+  sparse_dim: 250002
+  partitions:
+    - fasta
+    - pdb
+    - literature
+    - expression
+
+vectorizer:
+  class: "modules.data_engine.vectorizers.dnabert_vectorizer.DNABERT_Vectorizer"
+  params:
+    model_name: "~/projects/bioagent-os/models/dnabert-2"
+    device: "cpu"
+
+pipeline:
+  max_workers: 2
+  batch_size: 5
+  queue_size: 50

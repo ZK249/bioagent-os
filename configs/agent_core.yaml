@@ -1,0 +1,35 @@
+# LLM 提供商选择
+# 支持: kimi / openai / dashscope / deepseek / anthropic
+llm:
+  provider: "deepseek"           # 改这里切换平台
+  api_key: ""                # 留空则读取环境变量
+  model: ""                  # 留空使用平台默认模型
+  base_url: ""               # 留空使用平台默认地址
+  max_tokens: 2000
+  temperature: 0.3
+
+# 各平台环境变量名（参考）:
+#   kimi:       KIMI_API_KEY
+#   openai:     OPENAI_API_KEY
+#   dashscope:  DASHSCOPE_API_KEY
+#   deepseek:   DEEPSEEK_API_KEY
+#   anthropic:  ANTHROPIC_API_KEY
+
+memory:
+  redis:
+    host: "localhost"
+    port: 6379
+    db: 0
+  long_term:
+    collection_name: "agent_long_term"
+    dense_dim: 768
+  entity:
+    collection_name: "agent_entity_memory"
+
+agents:
+  bio_researcher:
+    name: "BioResearcher"
+    system_prompt: "expert bioinformatics researcher"
+  data_analyst:
+    name: "DataAnalyst"
+    system_prompt: "computational biology data analyst"

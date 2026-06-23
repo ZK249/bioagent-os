@@ -1,0 +1,48 @@
+# 全局系统配置
+system:
+  name: "BioAgent-OS"
+  version: "0.1.0"
+  log_level: "INFO"
+
+# LLM 配置（Qwen2.5/3 系列）
+llm:
+  provider: "vllm"           # vllm / ollama / api
+  model: "Qwen/Qwen2.5-14B-Instruct"
+  base_url: "http://localhost:8000/v1"
+  api_key: "EMPTY"
+  max_tokens: 4096
+  temperature: 0.3         # Agent任务低温度，保证稳定
+  top_p: 0.8
+  repetition_penalty: 1.05
+  
+  # 多模型分流
+  models:
+    chat: "Qwen2.5-14B-Instruct"
+    embedding: "BAAI/bge-m3"
+    rerank: "BAAI/bge-reranker-v2-m3"
+
+# 基础设施连接
+infra:
+  milvus:
+    host: "localhost"
+    port: 19530
+    db_name: "bioagent"
+    
+  neo4j:
+    uri: "bolt://localhost:7687"
+    user: "neo4j"
+    password: "bioagent123"
+    
+  redis:
+    host: "localhost"
+    port: 6379
+    db: 0
+    ttl:
+      short_term: 3600       # 1小时
+      working_memory: 86400  # 24小时
+
+# 路径配置
+paths:
+  data_dir: "./data"
+  cache_dir: "./cache"
+  logs_dir: "./logs"

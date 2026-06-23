@@ -1,0 +1,18 @@
+# Deep Research 配置
+
+arxiv:
+  max_results: 10
+  sort_by: "relevance"
+  categories:
+    - "q-bio.GN"   # Genomics
+    - "q-bio.MN"   # Molecular Networks
+    - "q-bio.BM"   # Biomolecules
+
+pubmed:
+  max_results: 10
+  sort_by: "relevance"
+
+synthesis:
+  model: ""        # 留空使用默认
+  max_tokens: 3000
+  temperature: 0.3
